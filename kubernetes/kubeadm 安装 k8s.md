@@ -224,7 +224,7 @@ kube-system   kube-scheduler-k8s-master            1/1       Running            
 # kubectl taint nodes --all node-role.kubernetes.io/master-
 ```
 
-# 不在master节点上操作集群，而是在其他工作节点上操作集群（可选）
+#### 不在master节点上操作集群，而是在其他工作节点上操作集群（可选）
 ```
 # scp root@<master ip>:/etc/kubernetes/admin.conf .  
 
