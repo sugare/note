@@ -51,7 +51,7 @@ metadata:
 type: Opaque
 ```
 ```
-kubectl create -f dashboard-certs.yaml 
+# kubectl create -f dashboard-certs.yaml 
 ```
 
 ### 5. 暴露端口
@@ -79,12 +79,12 @@ spec:
 
 ### 6. 创建 dashboard
 ```
-kubectl create -f kubernetes-dashboard.yaml
+# kubectl create -f kubernetes-dashboard.yaml
 ```
 
 ### 7. 获取token 登录
 ```
-[root@node1 ~]# kubectl describe secrets $(kubectl get secrets -n kube-system | grep kubernetes-dashboard-token | cut -d' ' -f1) -n kube-system
+# kubectl describe secrets $(kubectl get secrets -n kube-system | grep kubernetes-dashboard-token | cut -d' ' -f1) -n kube-system
 Name:         kubernetes-dashboard-token-ghbbm
 Namespace:    kube-system
 Labels:       <none>
