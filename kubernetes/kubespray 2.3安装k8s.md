@@ -1,4 +1,14 @@
-﻿### 0. 相关镜像
+﻿## 快速安装
+```
+git clone https://github.com/sugare/kubespray.git
+cd kubespray
+./install.sh
+```
+
+
+## 详细步骤
+
+### 0. 相关镜像
 
 镜像名 | 版本号
 ---|---
