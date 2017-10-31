@@ -25,6 +25,21 @@ PodPreset | settings.k8s.io/v1alpha1
 CustomResourceDefinition | apiextensions.k8s.io/v1beta1
 
 
+
+### Namespace
+Namespace 比较简单，可直接通过kubecl直接创建
+```
+kubectl create namespace my-namespace
+```
+```
+# vim my-namespace.yaml
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: my-namespace
+```
+
+
 ### Pod
 常用的pod yaml参数(根据需求修改相关参数)
 ```
@@ -126,6 +141,11 @@ spec:
 ```
 ### volume
 **emptyDir**
+
+Pod 被分配到Node上时候，会创建emptyDir，
+只要Pod运行在Node上，emptyDir都会存在（容器挂掉不会导致emptyDir丢失数据） ，
+但是如果Pod从Node上被删除（Pod被删除，或者Pod发生迁移） ，emptyDir也会被删
+除，并且永久丢失。
 ```
 kind: Pod
 apiVersion: v1
@@ -145,6 +165,8 @@ spec:
 
 
 **hostPath**
+
+将pod所在的node目录挂载到容器中
 ```
 kind: Pod
 apiVersion: v1
@@ -191,6 +213,8 @@ spec:
 ```
 
 ### gitRepo
+
+将git代码下拉到指定的容器路径中
 ```
 kind: Pod
 apiVersion: v1
@@ -328,7 +352,14 @@ spec:
     volumeID: "<vol-id>"
     fsType:   "<fs-type>"
 ```
+
 ### PV and PVC
+
+**pv和pvc是什么？pv和普通的volume有什么不同？**
+
+普通的volume和直接使用它的pod是一种静态绑定的关系，在定义pod的文件里，定义了它使用的volume，我们无法单独创建一个volume，因为它不是一个独立的k8s资源。
+
+而pv是一个独立的k8s资源对象，所以我们可以单独创建一个pv，它不和pod直接发生关系，而是通过PVC来实现绑定。pod只需定义pvc，至于后面的存储空间大小，存储类型都交给pvc来处理。
 ```
 # cat test-pv.yaml 
 kind: PersistentVolume
@@ -350,7 +381,7 @@ NAME      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM     STORA
 pv-nfs    500Mi      RWO            Recycle          Available                                      47s
 ```
 ```
-[root@node1 ~]# cat test-pvc.yaml 
+# cat test-pvc.yaml 
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -401,78 +432,7 @@ myclaim   Bound     pv-nfs    500Mi      RWO                           5m
 NAME      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM             STORAGECLASS   REASON    AGE
 pv-nfs    500Mi      RWO            Recycle          Bound     default/myclaim                            2m
 ```
-### Deployment
-简单的yaml模板
-```
-kind: Deployment
-apiVersion: extensions/v1beta1
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
-```
-Deployment 的yaml文件中只是定义了目标状态，当kubectl create -f 时，Deployment controller就会将Pod和Replica Set的实际状态改变到所定义的目标状态，根据yaml文件中所定义的 template来创建Pod，既然是Pod template，则Deployment yaml文件中 template后内容和定义Pod的yaml一样，具体可参考Pod yaml模板
 
-
-扩容
-```
-kubectl scale deployment nginx-deployment --replicas 10
-```
-更新
-```
-kubectl set image deployment/nginx-deployment nginx=nginx:1.9.1
-```
-回滚
-```
-kubectl rollout undo deployment/nginx-deployment
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Namespace
-Namespace 比较简单，可直接通过kubecl直接创建
-```
-kubectl create namespace my-namespace
-```
-```
-# vim my-namespace.yaml
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: my-namespace
-```
 
 
 ### Service
@@ -644,11 +604,313 @@ spec:
           serviceName: s2
           servicePort: 80
 ```
+### Deployment
+简单的yaml模板
+```
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+```
+Deployment 的yaml文件中只是定义了目标状态，当kubectl create -f 时，Deployment controller就会将Pod和Replica Set的实际状态改变到所定义的目标状态，根据yaml文件中所定义的 template来创建Pod，既然是Pod template，则Deployment yaml文件中 template后内容和定义Pod的yaml一样，具体可参考Pod yaml模板
+
+
+扩容
+```
+kubectl scale deployment nginx-deployment --replicas 10
+```
+更新
+```
+kubectl set image deployment/nginx-deployment nginx=nginx:1.9.1
+```
+回滚
+```
+kubectl rollout undo deployment/nginx-deployment
+```
+
+
+
+### ConfigMap
+**创建ConfigMap**
+
+通过yaml创建
+```
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: test-config
+  namespace: default
+data:
+  special.how: very
+  special.type: charm
+```
+
+通过命令创建
+```
+# kubectl create configmap special-config --from-literal=special.how=
+very --from-literal=special.type=charm
+# kubectl create configmap env-config --from-literal=log_level=INFO
+```
+**ConfigMap使用**
+
+ConfigMap可以通过三种方式在Pod中使用，三种分别方式为：设置环境变量、设置容器命令行参数以及在Volume中直接挂载文件或目录
+
+
+
+
+用作环境变量
+```
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: test-container
+    image: busybox
+    command: [ "/bin/sh", "-c", "env" ]
+    env:
+    - name: SPECIAL_LEVEL_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: special-config
+          key: special.how
+    - name: SPECIAL_TYPE_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: special-config
+          key: special.type
+    envFrom:
+      - configMapRef:
+        name: env-config
+  restartPolicy: Never
+```
+用做命令行参数
+```
+kind: Pod
+apiVersion: v1
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+  - name: test-container
+    image: busybox
+    command: [ "/bin/sh", "-c", "echo $(SPECIAL_LEVEL_KEY) $(SPECIAL_TYPE_KEY)" ]
+    env:
+    - name: SPECIAL_LEVEL_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: special-config
+          key: special.how
+    - name: SPECIAL_TYPE_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: special-config
+          key: special.type
+  restartPolicy: Never
+```
+挂载使用
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vol-test-pod
+spec:
+  containers:
+  - name: test-container
+    image: gcr.io/google_containers/busybox
+    command: [ "/bin/sh", "-c", "cat /etc/config/special.how" ]
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: special-config
+  restartPolicy: Never
+```
+
+### Secret
+Secret有三种类型：
+- Service Account：用来访问Kubernetes API，由Kubernetes自动创建，并且会自动挂载到Pod的 /run/secrets/kubernetes.io/serviceaccount 目录中；
+- Opaque：base64编码格式的Secret，用来存储密码、密钥等；
+- kubernetes.io/dockerconfigjson ：用来存储私有docker registry的认证信息。
+
+**Opaque Secret**
+Opaque类型的数据是一个map类型，要求value是base64编码
+```
+$ echo -n "admin" | base64
+YWRtaW4=
+$ echo -n "1f2d1e2e67df" | base64
+MWYyZDFlMmU2N2Rm
+```
+```
+# secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: mysecret
+type: Opaque
+data:
+  password: MWYyZDFlMmU2N2Rm
+  username: YWRtaW4=
+```
+
+Secret引用方式有两种：
+- 以Volume方式
+- 以环境变量方式
+
+**将secret挂载到volume中**
+```
+kind: Pod
+apiVersion: v1
+metadata:
+  labels:
+    name: db
+  name: db
+spec:
+  volumes:
+  - name: secrets
+    secret:
+      secretName: mysecret
+  containers:
+  - image: gcr.io/my_project_id/pg:v1
+    name: db
+    volumeMounts:
+    - name: secrets
+      mountPath: "/etc/secrets"
+      readOnly: true
+    ports:
+    - name: cp
+      containerPort: 5432
+      hostPort: 5432
+```
+
+**将secret 导出到环境变量中**
+```
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: wordpress-deployment
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        visualize: "true"
+    spec:
+      containers:
+      - name: "wordpress"
+        image: "wordpress"
+        ports:
+        - containerPort: 80
+        env: 
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: password
+```
+
+
+
+
+
+
+
+
+
+
+### Job
+处理短暂的一次性任务，仅执行一次的任务,Job Controller负责根据Job Spec创建Pod，并持续监控Pod的状态，直至其成功结束。如果失败，则根据restartPolicy（只支持OnFailure和Never，不支持Always）决定是否创建新的Pod再次重试任务。
+```
+kind: Job
+apiVersion: batch/v1
+metadata：
+  name: test-job
+spec:
+  completions: 3
+  template:
+    metadata:
+      name: test-job
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        command: ["cat", "/usr/share/nginx/html/index"]
+      restartPolicy: Never
+# 文件中 completions表示执行3次job，如果执行一次可不写该参数。
+```
+
+
+### CronJob
+CronJob即定时任务，类似于Linux系统的crontab，在指定的时间周期运行指定的任务。
+```
+kind: CronJob
+apiVersion: batch/v2alpha1
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 附录：
 https://github.com/kubernetes/examples/blob/master/staging/volumes/cephfs/README.md
 https://github.com/kubernetes/examples/blob/master/staging/volumes/glusterfs/README.md
-
+http://blog.csdn.net/liukuan73/article/details/60089305
 
 
 
