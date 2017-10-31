@@ -107,7 +107,9 @@ ignore_assert_errors: true  # 改为 true
 ```
 错误提示：
 Kubelet: Running with swap on is not supported, please disable swap! or set --fail-swap-on flag to false. /proc/
-...
+
+# 提示：Kubernetes 1.8开始要求关闭系统的Swap，如果不关闭，默认配置下kubelet将无法启动。可以通过kubelet的启动参数–fail-swap-on=false更改这个限制。 我们这里关闭系统的Swap:
+```
 
 解决方法：
 swapoff -a
