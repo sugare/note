@@ -93,7 +93,7 @@ fatal: [node1]: FAILED! => {
     "evaluated_to": false, 
     "failed": true
 }
-...
+```
 
 解决方法：
 # vim ./roles/kubernetes/preinstall/defaults/main.yml 
@@ -118,10 +118,25 @@ swapoff -a
 swapon -a
 
 ```
+
 #### 错误3 解决 kubedns-autoscaler无法启动
 ```
 # cd /etc/kubernetes/
 # sed -i 's#sugare/cluster-proportional-autoscaler-amd64:1.1.1#sugare/cluster-proportional-autoscaler-amd64#g' kubedns-autoscaler.yml.j2
+```
+
+#### 错误4 出现 dial tcp 10.233.102.191:8081: getsockopt: connection refused
+```
+错误提示：  Normal   Started                2m               kubelet, node1     Started container
+  Normal   Created                2m               kubelet, node1     Created container
+  Normal   Created                2m               kubelet, node1     Created container
+  Normal   Started                2m               kubelet, node1     Started container
+  Warning  Unhealthy              1m               kubelet, node1     Liveness probe failed: HTTP probe failed with statuscode: 503
+  Normal   Created                1m (x2 over 2m)  kubelet, node1     Created container
+  Normal   Pulled                 1m (x2 over 2m)  kubelet, node1     Container image "sugare/k8s-dns-kube-dns-amd64:1.14.5" already present on machine
+  Normal   Started                1m (x2 over 2m)  kubelet, node1     Started container
+  Warning  Unhealthy              1m (x7 over 2m)  kubelet, node1     Readiness probe failed: Get http://10.233.102.191:8081/readiness: dial tcp 10.233.102.191:8081: getsockopt: connection refused
+  Warning  Unhealthy              1m (x3 over 1m)  kubelet, node1     Liveness probe failed: HTTP probe failed with statuscode: 503
 ```
 
 #### 失败清理（推荐使用错误回滚）
