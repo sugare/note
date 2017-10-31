@@ -96,6 +96,7 @@ fatal: [node1]: FAILED! => {
 ```
 
 解决方法：
+```
 # vim ./roles/kubernetes/preinstall/defaults/main.yml 
 ...
 
@@ -112,6 +113,7 @@ Kubelet: Running with swap on is not supported, please disable swap! or set --fa
 ```
 
 解决方法：
+```
 swapoff -a
 
 注意：安装结束后
@@ -138,7 +140,11 @@ swapon -a
   Warning  Unhealthy              1m (x7 over 2m)  kubelet, node1     Readiness probe failed: Get http://10.233.102.191:8081/readiness: dial tcp 10.233.102.191:8081: getsockopt: connection refused
   Warning  Unhealthy              1m (x3 over 1m)  kubelet, node1     Liveness probe failed: HTTP probe failed with statuscode: 503
 ```
-
+解决方法：
+```
+systemctl stop firewalld
+systemctl disable firewalld
+```
 #### 失败清理（推荐使用错误回滚）
 ```
 rm -rf /etc/kubernetes/
