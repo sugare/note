@@ -57,7 +57,7 @@ type: Opaque
 ### 5. 暴露端口
 ```
 # vim kubernetes-dashboard.yaml
-```
+...
 kind: Service
 apiVersion: v1
 metadata:
