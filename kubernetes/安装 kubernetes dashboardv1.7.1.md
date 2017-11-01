@@ -106,6 +106,7 @@ token:      eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZ
 #### 附：
 如果想直接 Skip 进入 dashboard，则可以将dashboard 的 ServiceAccount 的权限提为 cluster-admin （不建议）
 ```
+# vim dashboard-admin.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -120,4 +121,7 @@ subjects:
 - kind: ServiceAccount
   name: kubernetes-dashboard
   namespace: kube-system
+```
+```
+# kubectl create -f dashboard-admin.yaml
 ```
