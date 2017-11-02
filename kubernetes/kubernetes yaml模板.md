@@ -359,7 +359,7 @@ spec:
 
 普通的volume和直接使用它的pod是一种静态绑定的关系，在定义pod的文件里，定义了它使用的volume，我们无法单独创建一个volume，因为它不是一个独立的k8s资源。
 
-而pv是一个独立的k8s资源对象，所以我们可以单独创建一个pv，它不和pod直接发生关系，而是通过PVC来实现绑定。pod只需定义pvc，至于后面的存储空间大小，存储类型都交给pvc来处理。
+而pv是一个独立的k8s资源对象，所以我们可以单独创建一个pv，它不和pod直接发生关系，而是通过PVC来实现绑定。pod只需定义pvc，至于后面与真正的volume对接都交给pvc来处理。
 ```
 # cat test-pv.yaml 
 kind: PersistentVolume
@@ -433,6 +433,61 @@ NAME      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM            
 pv-nfs    500Mi      RWO            Recycle          Bound     default/myclaim                            2m
 ```
 
+### StorageClass
+StorageClass 可以动态配置存储，什么意思？在创建 pv 时，加上 storageClassName 参数，这样 pvc 在使用 pv 时，只需指明 storageClassName 即可，这样将相同的 storageClass 整合到一起，无需关注底层 pv 类型，进一步减少了用户用于关注底层存储提供者所需的精力。
+```
+[root@node1 ~]# cat task-pv/task-pv-volume.yaml 
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/data"
+
+[root@node1 ~]# cat task-pv/task-pv-
+task-pv-claim.yaml   task-pv-pod.yaml     task-pv-volume.yaml  
+[root@node1 ~]# cat task-pv/task-pv-claim.yaml 
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: task-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+      
+[root@node1 ~]# cat task-pv/task-pv-pod.yaml 
+kind: Pod
+apiVersion: v1
+metadata:
+  name: task-pv-pod
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+       claimName: task-pv-claim
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: task-pv-storage
+
+```
 
 
 ### Service
