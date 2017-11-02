@@ -9,6 +9,7 @@ ReplicationController | v1
 Service Account | v1
 PersistentVolume | v1
 PersistentVolumeClaim | v1
+StorageClass | v1
 ResourceQuota | v1
 ConfigMap | v1
 Deployment | extensions/v1beta1
