@@ -487,6 +487,18 @@ spec:
         - mountPath: "/usr/share/nginx/html"
           name: task-pv-storage
 
+[root@node1 ~]# kubectl get pods
+NAME          READY     STATUS    RESTARTS   AGE
+task-pv-pod   1/1       Running   0          35m
+
+[root@node1 ~]# kubectl get pvc
+NAME            STATUS    VOLUME           CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+task-pv-claim   Bound     task-pv-volume   10Gi       RWO            manual         37m
+
+[root@node1 ~]# kubectl get pv
+NAME             CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                   STORAGECLASS   REASON    AGE
+task-pv-volume   10Gi       RWO            Retain           Bound     default/task-pv-claim   manual                   40m
+
 ```
 
 
