@@ -1,0 +1,17 @@
+[root@ppygqz02 home]# /opt/nginx-1.9.4/sbin/nginx -V
+nginx version: nginx/1.9.4
+built by gcc 4.4.7 20120313 (Red Hat 4.4.7-4) (GCC) 
+built with OpenSSL 1.0.1e-fips 11 Feb 2013
+TLS SNI support enabled
+configure arguments: --prefix=/opt/nginx-1.9.4 --with-http_ssl_module --with-http_stub_status_module --add-module=/home/nginx_upstream_check_module-master
+
+
+{\"webhooks\": [], \"storage\": {\"rootdirectory\": \"/var/lib/registry\", \"host\": \"192.168.70.15\", \"type\": \"filesystem\", \"hostdirectory\": \"/var/local/dce/registry\"}, \"readonly\": false, \"address\": \"192.168.70.15\"}","modifiedIndex":17392,"createdIndex":17392}
+
+
+http://blog.csdn.net/u010424605/article/details/44592533
+
+curl -L http://127.0.0.1:12379/v2/keys/DCE/v1/buildin-registry/settings -XPUT -d {\"webhooks\": [], \"storage\": {\"rootdirectory\": \"/var/lib/registry\", \"host\": \"192.168.70.15\", \"type\": \"filesystem\", \"hostdirectory\": \"/var/local/dce/registry\"}, \"readonly\": false, \"address\": \"192.168.70.15\"}
+
+
+ curl -L http://127.0.0.1:12379/v2/keys/DCE/v1/buildin-registry/settings -XPUT -d value="{\"webhooks\": [], \"storage\": {\"rootdirectory\": \"/var/lib/registry\", \"host\": \"192.168.70.15\", \"type\": \"filesystem\", \"hostdirectory\": \"/var/local/dce/registry\"}, \"readonly\": false, \"address\": \"192.168.70.15\"}"
